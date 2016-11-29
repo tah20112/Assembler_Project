@@ -1,33 +1,25 @@
+
 //
 // Created by anna on 11/28/16.
 //
 
 #include <stdio.h>
+#include <string.h>
 
-
-
-int disassemble(int instruction)
+void assemble(const char* instruction)
 {
-    int code;
-    if (instruction <= 0x3fff820)
+    int result;
+    result = strncmp (instruction,"addi",4);
+    if (result == 0)
     {
-        printf("add");
-        code = 0;
+        printf("%d\n", result);
+        printf("%s\n", "add immediate");
     }
-    else
-    {
-        printf("not add");
-        code = 1;
-    }
-    return code;
+    printf("%d\n", result);
 }
 
 
 int main() {
-    int code;
-    int add;
-    add = 0x014B4820;
-    code = disassemble(add);
-    return code;
+    assemble("addi s");
+    return 0;
 }
-
