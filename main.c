@@ -6,50 +6,56 @@
 #include <stdio.h>
 #include <string.h>
 
-int check_function(const char* instruction)
+int check_function(const char* instr)
 {
-    int result;
-    if(strcmp(instruction,"add") == 0){
-        result = 0;
+    int result = 0;
+    int funct = 0;
+    int opCode = 0;
+    if(strcmp(instr,"add") == 0){
+        opCode = 0x0;
+        funct = 0x0020;
         goto end;
     }
-    if(strcmp(instruction,"lw") == 0){
-        result = 1;
+    if(strcmp(instr,"lw") == 0){
+        opCode = 0x0023;
         goto end;
     }
-    if(strcmp(instruction,"sw") == 0){
-        result = 2;
+    if(strcmp(instr,"sw") == 0){
+        opCode = 0x2b;
         goto end;
     }
-    if(strcmp(instruction,"j") == 0){
-        result = 3;
+    if(strcmp(instr,"j") == 0){
+        opCode = 0x2;
         goto end;
     }
-    if(strcmp(instruction,"jr") == 0){
-        result = 4;
+    if(strcmp(instr,"jr") == 0){
+        opCode = 0x0;
+        funct = 0x8;
         goto end;
     }
-    if(strcmp(instruction,"jal") == 0){
-        result = 5;
+    if(strcmp(instr,"jal") == 0){
+        opCode = 0x3;
         goto end;
     }
-    if(strcmp(instruction,"bne") == 0){
-        result = 6;
+    if(strcmp(instr,"bne") == 0){
+        opCode = 0x5;
         goto end;
     }
-    if(strcmp(instruction,"xori") == 0){
-        result = 7;
+    if(strcmp(instr,"xori") == 0){
+        opCode = 0x14;
         goto end;
     }
-    if(strcmp(instruction,"sub") == 0){
-        result = 8;
+    if(strcmp(instr,"sub") == 0){
+        opCode = 0x0;
+        funct = 0x22;
         goto end;
     }
-    if(strcmp(instruction,"slt") == 0){
-        result = 9;
+    if(strcmp(instr,"slt") == 0){
+        opCode = 0x0;
+        funct = 0x2a;
         goto end;
     }
-    result = -1;
+    result = (opCode << 26) + opCode;
     end:
         return result;
 }
@@ -58,7 +64,7 @@ char** parse_instr(char* instruction){
     char* result;
     while((result = strsep(&instruction, " "))) printf("%s\n",result);
     printf("%s\n", result);
-
+    return result;
 }
 
 int main() {
