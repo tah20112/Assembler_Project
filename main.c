@@ -77,7 +77,7 @@ int check_function(const char* instr){
         goto end;
     }
     end:
-    }
+
         printf("%d\n",instr_type);
         result = (opCode << 26) | funct;
         return result;
@@ -90,30 +90,33 @@ int check_function(const char* instr){
 //     return result;
 // }
 
-void check_instr(int instr_type){
-    switch(instr_type){
-        case 0:    
-            r_type();
+int check_instr(int instr_type, char* instruction){
+    int i = 0;
+    switch(instr_type) {
+        case 0:
+            i = r_type(instruction);
             break;
         case 1:
-            i_type();
+            i = i_type(instruction);
             break;
         case 2:
-            j_type();
+            i = j_type(instruction);
             break;
+    }
+    return i;
 }
 
-int r_type(int instruction){
- 
+int r_type(char* instruction){
+
     return 0;
 }
 
-int i_type(int instruction){
+int i_type(char* instruction){
 
     return 1;
 }
 
-int j_type(int instruction){
+int j_type(char* instruction){
 
     return 2;
 }
@@ -127,6 +130,8 @@ int main() {
     // printf("%d\n", f);
     to_binary(i);
     printf("%x\n", i);
-    
+    char* f = "$t1";
+    int reg = check_instr(instr_type, f);
+
     return i;
 }
