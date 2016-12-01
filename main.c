@@ -90,7 +90,7 @@ int check_function(const char* instr){
 //     return result;
 // }
 
-int check_instr(int instr_type, char* instruction){
+int check_instr(int instr_type, char* instruction[3]){
     int i = 0;
     switch(instr_type) {
         case 0:
@@ -106,17 +106,27 @@ int check_instr(int instr_type, char* instruction){
     return i;
 }
 
-int r_type(char* instruction){
+int r_type(char* instruction[3]){
 
     return 0;
 }
 
-int i_type(char* instruction){
+int i_type(char* instruction[3]){
+    if (strncmp(instruction[0], "$s", 2) == 0){
+        switch(strncmp(instruction[0], "$s", 3)){
+            case 48: //s0
+                break;
+            case 49: //s1
+                break;
+            case 50: //s2
+        };
 
+
+    }
     return 1;
 }
 
-int j_type(char* instruction){
+int j_type(char* instruction[3]){
 
     return 2;
 }
@@ -130,7 +140,10 @@ int main() {
     // printf("%d\n", f);
     to_binary(i);
     printf("%x\n", i);
-    char* f = "$t1";
+    char* f[3];
+    f[0] = "$s0";
+    f[1] = "$s2";
+    f[3] = "100";
     int reg = check_instr(instr_type, f);
 
     return i;
