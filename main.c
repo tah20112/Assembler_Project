@@ -1,16 +1,11 @@
-
-//
-// Created by anna on 11/28/16.
-//
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-int instr_type = 4; //0 is R; 1 is I; 2 is J.
+int instr_type = -1; //0 is R; 1 is I; 2 is J.
 
 
-void byte_to_binary(int n){
+void to_binary(int n){
 
     while (n){
         if (n & 0x80000000)
@@ -82,6 +77,7 @@ int check_function(const char* instr){
         goto end;
     }
     end:
+    }
         printf("%d\n",instr_type);
         result = (opCode << 26) | funct;
         return result;
@@ -94,24 +90,42 @@ int check_function(const char* instr){
 //     return result;
 // }
 
+void check_instr(int instr_type){
+    switch(instr_type){
+        case 0:    
+            r_type();
+            break;
+        case 1:
+            i_type();
+            break;
+        case 2:
+            j_type();
+            break;
+}
+
 int r_type(int instruction){
+ 
     return 0;
 }
 
 int i_type(int instruction){
-    return 0;
+
+    return 1;
 }
 
 int j_type(int instruction){
-    return 0;
+
+    return 2;
 }
+
+
 
 int main() {
     //instr_type: 0 is R; 1 is I; 2 is J.
     int i = check_function("bne");
     // char ** f = parse_instr("slt $t3 $t4 $t1");
     // printf("%d\n", f);
-    byte_to_binary(i);
+    to_binary(i);
     printf("%x\n", i);
     
     return i;
