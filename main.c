@@ -112,18 +112,53 @@ int r_type(char* instruction[3]){
 }
 
 int i_type(char* instruction[3]){
+    char* reg_letter = "$";
     if (strncmp(instruction[0], "$s", 2) == 0){
-        switch(strncmp(instruction[0], "$s", 3)){
-            case 48: //s0
-                break;
-            case 49: //s1
-                break;
-            case 50: //s2
-        };
+        reg_letter = "$s";}
+    else if (strncmp(instruction[0], "$t", 2) == 0){
+        reg_letter = "$t";}
+    else if (strncmp(instruction[0], "$a", 2) == 0){
+        reg_letter = "$a";}
+    else if (strncmp(instruction[0], "$v", 2) == 0){
+        reg_letter = "$v";}
+    else if (strncmp(instruction[0], "$k", 2) == 0){
+        reg_letter = "$k";}
+    else if (strncmp(instruction[0], "$z", 2) == 0){
+        goto zero;}
+
+    printf("%d\n", strncmp(instruction[0], reg_letter, 3));
+    switch(strncmp(instruction[0], reg_letter, 3)){
+        case 48: //0
+            break;
+        case 49: //1
+            break;
+        case 50: //2
+            break;
+        case 51: //3
+            break;
+        case 52: //4
+            break;
+        case 53: //5
+            break;
+        case 54: //6
+            break;
+        case 55: //7
+            break;
+        case 56: //8
+            break;
+        case 57: //9
+            break;
+    };
+    goto end;
+    printf("%s\n", reg_letter);
 
 
-    }
-    return 1;
+    zero:
+        //put stuff for zero register
+        goto end;
+
+    end:
+        return 1;
 }
 
 int j_type(char* instruction[3]){
