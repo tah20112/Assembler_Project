@@ -134,6 +134,10 @@ int i_type(char* instruction[3]){
         else if (strncmp(instruction[0], "$z", 2) == 0) {
             goto zero;
         }
+        else{
+            //it must be a number
+            goto number;
+        }
 
         printf("%d\n", strncmp(instruction[0], reg_letter, 3));
         switch (strncmp(instruction[0], reg_letter, 3)) {
@@ -167,7 +171,9 @@ int i_type(char* instruction[3]){
         };
         zero:
             reg_codes[n] = 00000;
-
+        number:
+            //convert number to regcode and save it
+            reg_codes[n] = 1;
     }
 
         return 1;
