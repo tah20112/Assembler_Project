@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
 
 int instr_type = -1; //0 is R; 1 is I; 2 is J.
 
@@ -17,11 +18,23 @@ void to_binary(int n){
     printf("\n");
 }
 
+int r_type(int instruction){
+    return 0;
+}
+
+int i_type(int instruction){
+    return 1;
+}
+
+int j_type(int instruction){
+    return 2;
+}
+
 int check_function(const char* instr){
     int result = 0;
     int funct = 0;
     int opCode = 0;
-    //int instr_type = 0; //0 is R; 1 is I; 2 is J.
+
     if(strcmp(instr,"add") == 0){
         opCode = 0x0;
         funct = 0x0020;
@@ -77,56 +90,45 @@ int check_function(const char* instr){
         goto end;
     }
     end:
-    }
-        printf("%d\n",instr_type);
         result = (opCode << 26) | funct;
         return result;
 }
 
-// char** parse_instr(char* instruction){
-//     char* result;
-//     while((result = strsep(&instruction, " "))) printf("%s\n",result);
-//     printf("%s\n", result);
-//     return result;
-// }
+ char* *parse_instr(char *instruction){
+     char *word;
+     char* *output = malloc(5);
+     int counter = 0;
+     while (instruction != NULL){
+        word = strsep(&instruction, " ");
+        output[counter] = word;
+        counter++;
+     }
+     return output;
+ }
 
 void check_instr(int instr_type){
     switch(instr_type){
         case 0:    
-            r_type();
+            r_type(4);
             break;
         case 1:
-            i_type();
+            i_type(4);
             break;
         case 2:
-            j_type();
+            j_type(4);
             break;
+    }
 }
-
-int r_type(int instruction){
- 
-    return 0;
-}
-
-int i_type(int instruction){
-
-    return 1;
-}
-
-int j_type(int instruction){
-
-    return 2;
-}
-
 
 
 int main() {
     //instr_type: 0 is R; 1 is I; 2 is J.
-    int i = check_function("bne");
-    // char ** f = parse_instr("slt $t3 $t4 $t1");
-    // printf("%d\n", f);
+    const char fake[] = "slt $t3 $t4 $t1";
+    char *instr = strdup(fake);
+    char* *f;
+    f = parse_instr(instr);
+    int i = check_function(f[0]);
     to_binary(i);
     printf("%x\n", i);
-    
     return i;
 }
