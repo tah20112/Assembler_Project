@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
 
 int instr_type = -1; //0 is R; 1 is I; 2 is J.
 
@@ -16,11 +17,12 @@ void to_binary(int n){
     }
 }
 
+
 int check_function(const char* instr){
     int result = 0;
     int funct = 0;
     int opCode = 0;
-    //int instr_type = 0; //0 is R; 1 is I; 2 is J.
+
     if(strcmp(instr,"add") == 0){
         opCode = 0x0;
         funct = 0x0020;
@@ -80,14 +82,20 @@ int check_function(const char* instr){
         return result;
 }
 
-// char** parse_instr(char* instruction){
-//     char* result;
-//     while((result = strsep(&instruction, " "))) printf("%s\n",result);
-//     printf("%s\n", result);
-//     return result;
-// }
+ char* *parse_instr(char *instruction){
+     char *word;
+     char* *output = malloc(5);
+     int counter = 0;
+     while (instruction != NULL){
+        word = strsep(&instruction, " ");
+        output[counter] = word;
+        counter++;
+     }
+     return output;
+ }
 
-int check_instr(int instr_type, char* instruction[3]){
+
+int check_instruction(int instr_type, char* instruction[4]) {
     int i = 0;
     switch(instr_type) {
         case 0:
@@ -97,24 +105,25 @@ int check_instr(int instr_type, char* instruction[3]){
             i = i_type(instruction);
             break;
         case 2:
-            //i = j_type(instruction);
+            i = j_type(instruction);
             break;
     }
     return i;
 }
 
-int r_type(char* instruction[3]){
+int r_type(char* instruction[4]){
 
     return 0;
 }
 
 
-int i_type(char* instruction[3]){
-    int n = 0;
+int i_type(char* instruction[4]){
+    int n = 1;
     int reg_codes[3];
-    while (n < 3) {
+    while (n < 4) {
+        int a = n-1;
 
-        char *reg_letter = "$";
+        char* reg_letter = "$";
         if (strncmp(instruction[n], "$s", 2) == 0) {
             reg_letter = "$s";
         }
@@ -141,59 +150,59 @@ int i_type(char* instruction[3]){
         }
         else if (strncmp(instruction[n], "$z", 2) == 0) {
             reg_letter = "$";
-            reg_codes[n] = 0b00000;
+            reg_codes[a] = 0b00000;
         }
         else{
             reg_letter = "$";
             char* s = instruction[n];
-            sscanf(s, "%x", &reg_codes[n]);
+            sscanf(s, "%x", &reg_codes[a]);
         }
         int i = strncmp(instruction[n], reg_letter, 3);
 
         if (reg_letter == "$t"){
             if (i == 0x38){
-                reg_codes[n] = 24;
+                reg_codes[a] = 24;
             }
             else if (i == 0x39){
-                reg_codes[n] = 25;
+                reg_codes[a] = 25;
             }
             else {
-                reg_codes[n] = (i - 0x30) + 0x8;
+                reg_codes[a] = (i - 0x30) + 0x8;
             }
         }
         else if (reg_letter == "$s") {
             if (i == 112) {
-                reg_codes[n] = 29;
+                reg_codes[a] = 29;
             }
             else{
-                reg_codes[n] = (i-0x30) + 16;
+                reg_codes[a] = (i-0x30) + 16;
             }
         }
         else if (reg_letter == "$v") {
             if (i == 49) {
-                reg_codes[n] = 2;
+                reg_codes[a] = 2;
             }
             else if (i == 50){
-                reg_codes[n] = 3;
+                reg_codes[a] = 3;
             }
         }
         else if (reg_letter == "$a") {
             if (i == 116){
-                reg_codes[n] = 1;
+                reg_codes[a] = 1;
             }
-            reg_codes[n] = (i - 0x30) + 4;
+            reg_codes[a] = (i - 0x30) + 4;
             }
         else if (reg_letter == "$k") {
-            reg_codes[n] = (i - 0x30) + 26;
+            reg_codes[a] = (i - 0x30) + 26;
         }
         else if (reg_letter == "$g") {
-            reg_codes[n] = 28;
+            reg_codes[a] = 28;
         }
         else if (reg_letter == "$f") {
-            reg_codes[n] = 30;
+            reg_codes[a] = 30;
         }
         else if (reg_letter == "$r") {
-            reg_codes[n] = 31;
+            reg_codes[a] = 31;
         }
             n = n+1;
     }
@@ -202,28 +211,27 @@ int i_type(char* instruction[3]){
     int reg_3 = reg_codes[2];
 
     int reg_full =reg_1 | reg_2 | reg_3;
-
         return reg_full;
 }
 
-int j_type(char* instruction[3]){
+int j_type(char* instruction[4]){
 
     return 2;
 }
 
 
 
+
+
 int main() {
+    int reg = 1;
     //instr_type: 0 is R; 1 is I; 2 is J.
-    int i = check_function("bne");
-    // char ** f = parse_instr("slt $t3 $t4 $t1");
-    // printf("%d\n", f);
-    //to_binary(i);
-    char* f[3];
-    f[0] = "$at";
-    f[1] = "$zero";
-    f[2] = "3ffc";
-    int reg = check_instr(instr_type, f);
+    const char fake[] = "xori $t3 $t4 $t1";
+    char *instr = strdup(fake);
+    char* *f;
+    f = parse_instr(instr);
+    int i = check_function(f[0]);
+    reg = check_instruction(instr_type, f);
     printf("%x\n", reg);
-    return i;
+    return 0;
 }
