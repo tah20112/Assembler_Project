@@ -130,6 +130,15 @@ int i_type(char* instruction[3]){
         else if (strncmp(instruction[n], "$k", 2) == 0) {
             reg_letter = "$k";
         }
+        else if (strncmp(instruction[n], "$g", 2) == 0) {
+            reg_letter = "$g";
+        }
+        else if (strncmp(instruction[n], "$g", 2) == 0) {
+            reg_letter = "$f";
+        }
+        else if (strncmp(instruction[n], "$g", 2) == 0) {
+            reg_letter = "$r";
+        }
         else if (strncmp(instruction[n], "$z", 2) == 0) {
             reg_letter = "$";
             reg_codes[n] = 0b00000;
@@ -139,9 +148,8 @@ int i_type(char* instruction[3]){
             char* s = instruction[n];
             sscanf(s, "%x", &reg_codes[n]);
         }
-
-        printf("%d\n", strncmp(instruction[0], reg_letter, 3));
         int i = strncmp(instruction[n], reg_letter, 3);
+
         if (reg_letter == "$t"){
             if (i == 0x38){
                 reg_codes[n] = 24;
@@ -170,10 +178,23 @@ int i_type(char* instruction[3]){
             }
         }
         else if (reg_letter == "$a") {
+            if (i == 116){
+                reg_codes[n] = 1;
+            }
             reg_codes[n] = (i - 0x30) + 4;
             }
-
-
+        else if (reg_letter == "$k") {
+            reg_codes[n] = (i - 0x30) + 26;
+        }
+        else if (reg_letter == "$g") {
+            reg_codes[n] = 28;
+        }
+        else if (reg_letter == "$f") {
+            reg_codes[n] = 30;
+        }
+        else if (reg_letter == "$r") {
+            reg_codes[n] = 31;
+        }
             n = n+1;
     }
     int reg_1 = reg_codes[0] << 16;
@@ -199,7 +220,7 @@ int main() {
     // printf("%d\n", f);
     //to_binary(i);
     char* f[3];
-    f[0] = "$s";
+    f[0] = "$at";
     f[1] = "$zero";
     f[2] = "3ffc";
     int reg = check_instr(instr_type, f);
