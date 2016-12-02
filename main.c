@@ -14,7 +14,6 @@ void to_binary(int n){
             printf("0");
         n <<= 1;
     }
-    printf("\n");
 }
 
 int check_function(const char* instr){
@@ -77,8 +76,6 @@ int check_function(const char* instr){
         goto end;
     }
     end:
-
-        printf("%d\n",instr_type);
         result = (opCode << 26) | funct;
         return result;
 }
@@ -143,7 +140,7 @@ int i_type(char* instruction[3]){
             sscanf(s, "%x", &reg_codes[n]);
         }
 
-        //printf("%d\n", strncmp(instruction[0], reg_letter, 3));
+        printf("%d\n", strncmp(instruction[0], reg_letter, 3));
         int i = strncmp(instruction[n], reg_letter, 3);
         if (reg_letter == "$t"){
             if (i == 0x38){
@@ -154,8 +151,6 @@ int i_type(char* instruction[3]){
             }
             else {
                 reg_codes[n] = (i - 0x30) + 0x8;
-                //printf("%s\n", "here");
-                printf("%d\n", reg_codes[n]);
             }
         }
         else if (reg_letter == "$s") {
@@ -165,7 +160,6 @@ int i_type(char* instruction[3]){
             else{
                 reg_codes[n] = (i-0x30) + 16;
             }
-
         }
         else if (reg_letter == "$v") {
             if (i == 49) {
@@ -174,7 +168,6 @@ int i_type(char* instruction[3]){
             else if (i == 50){
                 reg_codes[n] = 3;
             }
-
         }
         else if (reg_letter == "$a") {
             reg_codes[n] = (i - 0x30) + 4;
@@ -183,9 +176,6 @@ int i_type(char* instruction[3]){
 
             n = n+1;
     }
-    printf("%d\n", reg_codes[0]);
-    printf("%d\n", reg_codes[1]);
-    printf("%d\n", reg_codes[2]);
     int reg_1 = reg_codes[0] << 16;
     int reg_2 = reg_codes[1] << 21;
     int reg_3 = reg_codes[2];
@@ -207,10 +197,9 @@ int main() {
     int i = check_function("bne");
     // char ** f = parse_instr("slt $t3 $t4 $t1");
     // printf("%d\n", f);
-    to_binary(i);
-    printf("%x\n", i);
+    //to_binary(i);
     char* f[3];
-    f[0] = "$s1";
+    f[0] = "$s";
     f[1] = "$zero";
     f[2] = "3ffc";
     int reg = check_instr(instr_type, f);
