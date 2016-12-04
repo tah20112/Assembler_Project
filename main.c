@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -95,21 +96,6 @@ int check_function(const char* instr){
  }
 
 
-int check_instruction(int instr_type, char* instruction[4]) {
-    int i = 0;
-    switch(instr_type) {
-        case 0:
-            i = r_type(instruction);
-            break;
-        case 1:
-            i = i_type(instruction);
-            break;
-        case 2:
-            i = j_type(instruction);
-            break;
-    }
-    return i;
-}
 
 int r_type(char* instruction[4]){
 
@@ -219,11 +205,47 @@ int j_type(char* instruction[4]){
     return 2;
 }
 
+int check_instruction(int instr_type, char* instruction[4]) {
+    int i = 0;
+    switch(instr_type) {
+        case 0:
+            i = r_type(instruction);
+            break;
+        case 1:
+            i = i_type(instruction);
+            break;
+        case 2:
+            i = j_type(instruction);
+            break;
+    }
+    return i;
+}
 
+void readFile(char * file){
 
+    FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
 
+   fp = fopen("./README.md", "r");
+    if (fp == NULL){
+        printf("Error: file empty");
+        exit(EXIT_FAILURE);
+    }
 
-int main() {
+    while((read = getline(&line, &len, fp)) != -1){
+        printf("%s",line);
+    }
+
+    fclose(fp);
+    if (line)
+        free(line);
+}
+
+int main(int argc, char* argv[]) {
+
+    readFile(argv[1]);
     int reg = 1;
     //instr_type: 0 is R; 1 is I; 2 is J.
     const char fake[] = "xori $t3 $t4 $t1";
