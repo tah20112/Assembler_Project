@@ -87,10 +87,17 @@ int check_function(const char* instr){
      char *word;
      char* *output = malloc(5);
      int counter = 0;
+     size_t comm_test;
+
      while (instruction != NULL){
         word = strsep(&instruction, " ");
-        output[counter] = word;
-        counter++;
+        comm_test = strcspn(word, "#");
+        if (comm_test != 0){
+            output[counter] = word;
+            counter++;
+        } else{
+            break;
+        }
      }
      return output;
  }
@@ -221,39 +228,59 @@ int check_instruction(int instr_type, char* instruction[4]) {
     return i;
 }
 
-void readFile(char * file){
+char* *readFile(char * file){
 
     FILE * fp;
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
+    char* *text_lines = calloc(128, sizeof(char*));
+    int counter = 0;
 
-   fp = fopen("./README.md", "r");
+   fp = fopen(file, "r");
     if (fp == NULL){
         printf("Error: file empty");
         exit(EXIT_FAILURE);
     }
 
     while((read = getline(&line, &len, fp)) != -1){
-        printf("%s",line);
+        if (line[0] != '\n'){
+            text_lines[counter] = strdup(line);
+            counter ++;
+        }
     }
 
-    fclose(fp);
-    if (line)
-        free(line);
+    //fclose(fp);
+    //if (line)
+    //    free(line);
+    return text_lines;
 }
 
 int main(int argc, char* argv[]) {
 
-    readFile(argv[1]);
-    int reg = 1;
     //instr_type: 0 is R; 1 is I; 2 is J.
-    const char fake[] = "xori $t3 $t4 $t1";
+
+    char* *file_text = readFile(argv[1]);
+    FILE * fout = fopen(argv[2], "w+");
+    int fileSize = atoi(argv[3]);
+
+    const char fake[] = "xori $t3 $t4 $t1 # Now a comment";
     char *instr = strdup(fake);
     char* *f;
-    f = parse_instr(instr);
-    int i = check_function(f[0]);
+    int reg;
+    int i;
+
+    for (int lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
+        instr = strdup(file_text[lineNum]);
+        f = parse_instr(instr);
+        if (f[0] != 0){
+            printf("%d\n", lineNum); // anything that happens in this conditional happens with the useful values of f
+            fprintf(fout, "%s\n",f[0]);
+        }
+    }
+    i = check_function(file_text[0]);
     reg = check_instruction(instr_type, f);
     printf("%x\n", reg);
+
     return 0;
 }
