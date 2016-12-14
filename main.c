@@ -2,11 +2,20 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include "uthash.h"
 
 int instr_type = -1; //0 is R; 1 is I; 2 is J.
+struct my_struct *hashtable = NULL;
+ // Initializing a hash table to store jump points
 
+struct my_struct {
+    char label[20];
+    int lineNumber;
+    UT_hash_handle hh;
+};
 
-int j_type(char* instruction[2]);
+char* j_type(char* instruction[2]);
+
 
 void to_binary(int n){
 
@@ -20,10 +29,11 @@ void to_binary(int n){
 }
 
 
-int check_function(const char* instr){
+int check_function(char* instr){
     int result = 0;
     int funct = 0;
     int opCode = 0;
+    char* label;
 
     if(strcmp(instr,"add") == 0){
         opCode = 0x0;
@@ -79,6 +89,8 @@ int check_function(const char* instr){
         instr_type = 0;
         goto end;
     }
+    // label = instr;
+    // HASH_ADD_STR(hashtable, label, lineNumber); 
     end:
         result = (opCode << 26) | funct;
         return result;
@@ -99,6 +111,7 @@ int check_function(const char* instr){
 
 int check_instruction(char* instruction[4]) {
     int i = 0;
+    char* j;
     switch(instr_type) {
         case 0:
             i = r_type(instruction);
@@ -107,7 +120,8 @@ int check_instruction(char* instruction[4]) {
             i = i_type(instruction);
             break;
         case 2:
-            i = j_type(instruction);
+            j = j_type(instruction);
+            // return j; //get value from hashtable and return int
             break;
     }
     return i;
@@ -323,32 +337,61 @@ int i_type(char* instruction[4]){
         return reg_full;
 }
 
-int j_type(char* instruction[2]){
-    
-    int reg_codes;
-    char* s = instruction[1];
-    sscanf(s, "%x", &reg_codes);
-    int immediate = reg_codes;
+// function that takes in all instructions, saves 
+// all labels and line numbers in hashtable first?
 
-    return immediate;
+char* j_type(char* instruction[2]){
+    
+    char* reg_codes;
+    char* s = instruction[1];
+    sscanf(s, "%p", &reg_codes);
+    char* label = reg_codes;
+    return label;
+
+    // HASH_FIND_STR(hashtable, instruction[1], s);
+    // return s;
+
 }
 
+//dictionary to point 
+
+// j label
+// label is key and line number is value
+
+int main(int argc, char *argv[]) {
+    // char* instruction = "j inloop";
+    // char *instr = strdup(instruction);
+    // char* *parsed_instr;
+    // parsed_instr = parse_instr(instr);
+    // int i = check_function(parsed_instr[0]);
+    // int r = check_instruction(parsed_instr);
+    // int full = i | r ;
+    // printf("%x\n", full);
 
 
+    // to_binary(full);
 
 
-int main() {
-    char* instruction = "j 450";
-    char *instr = strdup(instruction);
-    char* *parsed_instr;
-    parsed_instr = parse_instr(instr);
-    int i = check_function(parsed_instr[0]);
-    int r = check_instruction(parsed_instr);
-    int full = i | r ;
-    printf("%x\n", full);
+    const char **n, *label[] = { "joe", "bob", "betty", NULL };
+    struct my_struct *s, *tmp, *users = NULL;
+    int i=0;
 
+    for (n = names; *n != NULL; n++) {
+        s = (struct my_struct*)malloc(sizeof(struct my_struct));
+        strncpy(s->name, *n,10);
+        s->id = i++;
+        HASH_ADD_STR( users, name, s );
+    }
 
-    to_binary(full);
+    HASH_FIND_STR( users, "betty", s);
+    if (s) printf("betty's id is %d\n", s->id);
 
+    /* free the hash table contents */
+    HASH_ITER(hh, users, s, tmp) {
+      HASH_DEL(users, s);
+      free(s);
+    }
     return 0;
+
+    // return 0;
 }
