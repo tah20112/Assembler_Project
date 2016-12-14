@@ -518,7 +518,7 @@ int main(int argc, char* argv[]) {
         if (f[0] != 0){
             // anything that happens in this conditional happens with the useful values of f
             int res = run_each(f, lineNum);
-            fprintf(fout, "%x\n",res);
+            fprintf(fout, "%08x\n",res);
             printf("%x\n",res);
         }
     }
