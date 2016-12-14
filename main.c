@@ -278,6 +278,7 @@ int main(int argc, char* argv[]) {
             fprintf(fout, "%s\n",f[0]);
         }
     }
+    fclose(fout);
     i = check_function(file_text[0]);
     reg = check_instruction(instr_type, f);
     printf("%x\n", reg);
