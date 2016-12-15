@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include "uthash.h"
 
-int instr_type = -1; //0 is R; 1 is I; 2 is J.
+int instr_type = -1; //0 is R; 1 is I; 2 is J; 3 is label
 
 
 int j_type(char* instruction[2]);
@@ -32,11 +31,22 @@ void to_binary(int n){
 }
 
 
+void add_label(int lineNum, char *label) {
+    struct my_struct *s;
+
+    HASH_FIND_INT(jumps, &lineNum, s);  /* id already in the hash? */
+    if (s==NULL) {
+        s = (struct my_struct*)malloc(sizeof(struct my_struct));
+        s->lineNum = lineNum;
+        HASH_ADD_INT( jumps, lineNum, s );  /* id: name of key field */
+    }
+    strcpy(s->label, label);
+}
+
 int check_function(char* instr, int lineNum){
     int result = 0;
     int funct = 0;
     int opCode = 0;
-    struct my_struct *s = NULL;
 
     if(strcmp(instr,"add") == 0){
         opCode = 0x0;
@@ -44,56 +54,62 @@ int check_function(char* instr, int lineNum){
         instr_type = 0;
         goto end;
     }
-    if(strcmp(instr,"lw") == 0){
+    else if(strcmp(instr,"addi") == 0){
+        opCode = 0x8;
+        funct = 0x0020;
+        instr_type = 1;
+        goto end;
+    }
+    else if(strcmp(instr,"lw") == 0){
         opCode = 0x0023;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"sw") == 0){
+    else if(strcmp(instr,"sw") == 0){
         opCode = 0x2b;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"j") == 0){
+    else if(strcmp(instr,"j") == 0){
         opCode = 0x2;
         instr_type = 2;
         goto end;
     }
-    if(strcmp(instr,"jr") == 0){
+    else if(strcmp(instr,"jr") == 0){
         opCode = 0x0;
         funct = 0x8;
         instr_type = 0;
         goto end;
     }
-    if(strcmp(instr,"jal") == 0){
+    else if(strcmp(instr,"jal") == 0){
         opCode = 0x3;
         instr_type = 2;
         goto end;
     }
-    if(strcmp(instr,"bne") == 0){
+    else if(strcmp(instr,"bne") == 0){
         opCode = 0x5;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"xori") == 0){
+    else if(strcmp(instr,"xori") == 0){
         opCode = 0xe;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"sub") == 0){
+    else if(strcmp(instr,"sub") == 0){
         opCode = 0x0;
         funct = 0x22;
         instr_type = 0;
         goto end;
     }
-    if(strcmp(instr,"slt") == 0){
+    else if(strcmp(instr,"slt") == 0){
         opCode = 0x0;
         funct = 0x2a;
         instr_type = 0;
         goto end;
     }
     else {
-        HASH_ADD_INT(jumps, lineNum, s);
+        add_label(lineNum, instr);
         opCode = 0x0;
         funct = 0x0;
         instr_type = 3;
@@ -355,32 +371,21 @@ int j_type(char* instruction[2]){
     struct my_struct *s;
 
     for(s=jumps; s != NULL; s=s->hh.next) {
-        printf("user id %d: name %s\n", s->lineNum, s->label);
-        if (s->label == label){
+        //printf("user id %d: name %s\n", s->lineNum, s->label);
+        char* checklabel = &s->label[0];
+        printf("%s", checklabel);
+        printf("%s", label);
+        printf("%s", checklabel);
+        if (label == checklabel){
             return s -> lineNum;
         }
     }
+    printf("%s\n", "not found");
     return 0;
 
 
 }
 
-
-
-
-
-
-void add_label(int lineNum, char *label) {
-    struct my_struct *s;
-
-    HASH_FIND_INT(jumps, &lineNum, s);  /* id already in the hash? */
-    if (s==NULL) {
-        s = (struct my_struct*)malloc(sizeof(struct my_struct));
-        s->lineNum = lineNum;
-        HASH_ADD_INT( jumps, lineNum, s );  /* id: name of key field */
-    }
-    strcpy(s->label, label);
-}
 
 /*void add_user(struct my_struct **users, int user_id, char *name) {
     HASH_ADD_INT( *users, id, s );
@@ -393,34 +398,48 @@ struct my_struct *find_label(int lineNum) {
     return s;
 }
 
-int main(int argc, char *argv[]) {
-    char* instruction = "frog";
+int run_each(char* instruction, int lineNum){
     char *instr = strdup(instruction);
     char* *parsed_instr;
     parsed_instr = parse_instr(instr);
-    printf("%x\n", 0);
+    int i = check_function(parsed_instr[0], lineNum);
+    if (instr_type == 3){
+        return 0;
+    }
+    else{
+        int r = check_instruction(parsed_instr);
+        int full = i | r ;
+        return full;
+    }
+}
+
+int main(int argc, char *argv[]) {
+/*    char* instruction = "frog";
+    char *instr = strdup(instruction);
+    char* *parsed_instr;
+    parsed_instr = parse_instr(instr);
     int i = check_function(parsed_instr[0], 30);
-    printf("%x\n", 1);
     int r = check_instruction(parsed_instr);
-    printf("%x\n", 2);
     int full = i | r ;
-    printf("%x\n", 3);
     struct my_struct *s;
     instruction = "j frog";
     instr = strdup(instruction);
     parsed_instr = parse_instr(instr);
     i = check_function(parsed_instr[0],11);
     r = check_instruction(parsed_instr);
-    full = i | r;
-    printf("%x\n", full);
+    full = i | r;*/
+    char* test = "frog";
+    int result = run_each(test, 2);
+    test = "j frog";
+    result = run_each(test, 2);
 
+    printf("%s\n", "result:");
+    printf("%x\n", result);
+    //to_binary(full);
 
-    to_binary(full);
+//    add_label(35, "frog");
 
-    add_label(35, "frog");
-
-    s = find_label(35);
-    printf("%s\n", s ? s->label : "unknown");
+//    s = find_label(35);
 
 
 
