@@ -402,8 +402,6 @@ int check_instruction(char* instruction[4]) {
 
 
 
-int j_type(char* instruction[2]){
-=======
 //This function takes in the full parsed mips instruction
 //  and outputs the correct register codes for an i-type instruction
 //Input: parsed string with pointer containing separated instruction ("j" "45")
@@ -411,8 +409,8 @@ int j_type(char* instruction[2]){
 int j_type(char* instruction[2]){
 
     int reg_codes;
-    char* s = instruction[1];
-    sscanf(s, "%x", &reg_codes);
+    char* a = instruction[1];
+    sscanf(a, "%x", &reg_codes);
     int immediate = reg_codes;
 
 
@@ -440,24 +438,7 @@ int j_type(char* instruction[2]){
 //  runs the correct type of instruction parser
 //Input: parsed string with pointer containing separated instruction ("addi" "$s1" "$t2" "45")
 //Output: 26-bit machine code corresponding to the correct registers and immediate used
-int check_instruction(char* instruction[4]) {
 
-    int i = 0;
-    switch(instr_type) {
-        case 0:
-            i = r_type(instruction);
-            break;
-        case 1:
-            i = i_type(instruction);
-            break;
-        case 2:
-            i = j_type(instruction);
-            break;
-        default:break;
-
-    }
-    return i;
-}
 
 char* *readFile(char * file){
 
@@ -516,33 +497,6 @@ int run_each(char* instruction, int lineNum){
     }
 }
 
-int main(int argc, char *argv[]) {
-/*    char* instruction = "frog";
-    char *instr = strdup(instruction);
-    char* *parsed_instr;
-    parsed_instr = parse_instr(instr);
-    int i = check_function(parsed_instr[0], 30);
-    int r = check_instruction(parsed_instr);
-    int full = i | r ;
-    struct my_struct *s;
-    instruction = "j frog";
-    instr = strdup(instruction);
-    parsed_instr = parse_instr(instr);
-    i = check_function(parsed_instr[0],11);
-    r = check_instruction(parsed_instr);
-    full = i | r;*/
-    char* test = "frog";
-    int result = run_each(test, 2);
-    test = "j frog";
-    result = run_each(test, 2);
-
-    printf("%s\n", "result:");
-    printf("%x\n", result);
-    //to_binary(full);
-
-//    add_label(35, "frog");
-
-//    s = find_label(35);
 
 int main(int argc, char* argv[]) {
 
@@ -568,9 +522,36 @@ int main(int argc, char* argv[]) {
         }
     }
     fclose(fout);
-    i = check_function(file_text[0]);
+    i = check_function(file_text[0], lineNum);
     reg = check_instruction(f);
     printf("%x\n", reg);
+
+    /*    char* instruction = "frog";
+    char *instr = strdup(instruction);
+    char* *parsed_instr;
+    parsed_instr = parse_instr(instr);
+    int i = check_function(parsed_instr[0], 30);
+    int r = check_instruction(parsed_instr);
+    int full = i | r ;
+    struct my_struct *s;
+    instruction = "j frog";
+    instr = strdup(instruction);
+    parsed_instr = parse_instr(instr);
+    i = check_function(parsed_instr[0],11);
+    r = check_instruction(parsed_instr);
+    full = i | r;*/
+    char* test = "frog";
+    int result = run_each(test, 2);
+    test = "j frog";
+    result = run_each(test, 2);
+
+    printf("%s\n", "result:");
+    printf("%x\n", result);
+    //to_binary(full);
+
+//    add_label(35, "frog");
+
+//    s = find_label(35);
 
     return 0;
 }
