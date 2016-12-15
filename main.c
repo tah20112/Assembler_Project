@@ -1,15 +1,26 @@
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stddef.h>
-
-int instr_type = -1;          // 0 is R; 1 is I; 2 is J.
+#include "uthash.h"
 
 
+int instr_type = -1; //0 is R; 1 is I; 2 is J; 3 is label
+
+
+
+
+struct my_struct *jumps = NULL;
+struct my_struct {
+    int lineNum;                    /* key */
+    char label[10];
+    UT_hash_handle hh;         /* makes this structure hashable */
+};
 
 //This function prints the binary of a hex input
 //Input: hex number
 //Output: none (prints binary number)
+
 void to_binary(int n){
     while (n){
         if (n & 0x80000000)
@@ -20,11 +31,26 @@ void to_binary(int n){
     }
 }
 
+
+void add_label(int lineNum, char *label) {
+    struct my_struct *s;
+
+    HASH_FIND_INT(jumps, &lineNum, s);  /* id already in the hash? */
+    if (s==NULL) {
+        s = (struct my_struct*)malloc(sizeof(struct my_struct));
+        s->lineNum = lineNum;
+        HASH_ADD_INT( jumps, lineNum, s );  /* id: name of key field */
+    }
+    strcpy(s->label, label);
+}
+
+int check_function(char* instr, int lineNum){
+
 //This function takes the function instruction and
 //  checks it and outputs the correct opcodes and function codes
 //Input: string containing function ('add','j','xori',etc...)
 //Output: 32-bit opcode and, if used, function code
-int check_function(const char* instr){
+
     int result = 0;
     int funct = 0;
     int opCode = 0;
@@ -35,52 +61,65 @@ int check_function(const char* instr){
         instr_type = 0;
         goto end;
     }
-    if(strcmp(instr,"lw") == 0){
+    else if(strcmp(instr,"addi") == 0){
+        opCode = 0x8;
+        funct = 0x0020;
+        instr_type = 1;
+        goto end;
+    }
+    else if(strcmp(instr,"lw") == 0){
         opCode = 0x0023;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"sw") == 0){
+    else if(strcmp(instr,"sw") == 0){
         opCode = 0x2b;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"j") == 0){
+    else if(strcmp(instr,"j") == 0){
         opCode = 0x2;
         instr_type = 2;
         goto end;
     }
-    if(strcmp(instr,"jr") == 0){
+    else if(strcmp(instr,"jr") == 0){
         opCode = 0x0;
         funct = 0x8;
         instr_type = 0;
         goto end;
     }
-    if(strcmp(instr,"jal") == 0){
+    else if(strcmp(instr,"jal") == 0){
         opCode = 0x3;
         instr_type = 2;
         goto end;
     }
-    if(strcmp(instr,"bne") == 0){
+    else if(strcmp(instr,"bne") == 0){
         opCode = 0x5;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"xori") == 0){
+    else if(strcmp(instr,"xori") == 0){
         opCode = 0xe;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"sub") == 0){
+    else if(strcmp(instr,"sub") == 0){
         opCode = 0x0;
         funct = 0x22;
         instr_type = 0;
         goto end;
     }
-    if(strcmp(instr,"slt") == 0){
+    else if(strcmp(instr,"slt") == 0){
         opCode = 0x0;
         funct = 0x2a;
         instr_type = 0;
+        goto end;
+    }
+    else {
+        add_label(lineNum, instr);
+        opCode = 0x0;
+        funct = 0x0;
+        instr_type = 3;
         goto end;
     }
     end:
@@ -96,10 +135,17 @@ int check_function(const char* instr){
      char *word;
      char* *output = malloc(5);
      int counter = 0;
+     size_t comm_test;
+
      while (instruction != NULL){
         word = strsep(&instruction, " ");
-        output[counter] = word;
-        counter++;
+        comm_test = strcspn(word, "#");
+        if (comm_test != 0){
+            output[counter] = word;
+            counter++;
+        } else{
+            break;
+        }
      }
      return output;
  }
@@ -226,10 +272,12 @@ int r_type(char* instruction[4]){
 
 }
 
+
 //This function takes in the full parsed mips instruction
 //  and outputs the correct register codes for an i-type instruction
 //Input: parsed string with pointer containing separated instruction ("addi" "$t1" "$t2" "45")
 //Output: 26-bit machine code corresponding to the correct registers and immediate used
+
 int i_type(char* instruction[4]){
     int n = 1;
     int reg_codes[3];
@@ -327,25 +375,13 @@ int i_type(char* instruction[4]){
         return reg_full;
 }
 
+
 //This function takes in the full parsed mips instruction
 //  and outputs the correct register codes for an i-type instruction
 //Input: parsed string with pointer containing separated instruction ("j" "45")
 //Output: 26-bit machine code corresponding to the correct registers and immediate used
-int j_type(char* instruction[2]){
+int j_type(char* instruction[2]);
 
-    int reg_codes;
-    char* s = instruction[1];
-    sscanf(s, "%x", &reg_codes);
-    int immediate = reg_codes;
-
-    return immediate;
-}
-
-//This function takes in the full parsed mips instruction
-//  and according to the instruction type (global variable instr_type, assigned in check_function)
-//  runs the correct type of instruction parser
-//Input: parsed string with pointer containing separated instruction ("addi" "$s1" "$t2" "45")
-//Output: 26-bit machine code corresponding to the correct registers and immediate used
 int check_instruction(char* instruction[4]) {
     int i = 0;
     switch(instr_type) {
@@ -357,26 +393,125 @@ int check_instruction(char* instruction[4]) {
             break;
         case 2:
             i = j_type(instruction);
-            break;
-        case -1:
+            // return j; //get value from hashtable and return int
             break;
         default:break;
     }
     return i;
 }
 
+
+// function that takes in all instructions, saves
+// all labels and line numbers in hashtable first?
+
+
+
+
+
+//This function takes in the full parsed mips instruction
+//  and outputs the correct register codes for an i-type instruction
+//Input: parsed string with pointer containing separated instruction ("j" "45")
+//Output: 26-bit machine code corresponding to the correct registers and immediate used
+int j_type(char* instruction[2]){
+
+    int reg_codes;
+    char* a = instruction[1];
+    sscanf(a, "%x", &reg_codes);
+
+    char* label = instruction[1];
+    struct my_struct *s;
+
+    for(s=jumps; s != NULL; s=s->hh.next) {
+        //printf("user id %d: name %s\n", s->lineNum, s->label);
+
+        char* checklabel = &s->label[0];
+        if (strcmp(checklabel, label) == 0){
+            return s -> lineNum;
+        }
+    }
+    return 0;
+
+
+}
+
+//This function takes in the full parsed mips instruction
+//  and according to the instruction type (global variable instr_type, assigned in check_function)
+//  runs the correct type of instruction parser
+//Input: parsed string with pointer containing separated instruction ("addi" "$s1" "$t2" "45")
+//Output: 26-bit machine code corresponding to the correct registers and immediate used
+
+
+char* *readFile(char * file){
+
+    FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    char* *text_lines = calloc(128, sizeof(char*));
+    int counter = 0;
+    ssize_t read = 0;
+
+    fp = fopen(file, "r");
+    if (fp == NULL){
+        printf("Error: file empty");
+        exit(EXIT_FAILURE);
+    }
+
+      while(read != -1){
+          read = getline(&line, &len, fp);
+          if (line[0] != '\n'){
+            text_lines[counter] = strdup(line);
+            counter ++;
+        }
+    }
+
+    //fclose(fp);
+    //if (line)
+    //    free(line);
+    return text_lines;
+}
+
+
+
+
 //This is the main function of the  program
 //  it runs all the other functions
 //Input: none
 //Output: 32-bit machine code corresponding to the correct functions, registers, and immediate used
-int main() {
-    char* instruction = "j 450";
-    char *instr = strdup(instruction);
-    char* *parsed_instr;
-    parsed_instr = parse_instr(instr);
-    int i = check_function(parsed_instr[0]);
-    int r = check_instruction(parsed_instr);
-    int full = i | r ;
+int run_each(char* *parsed_instr, int lineNum){
 
-    return full;
+    int i = check_function(parsed_instr[0], lineNum);
+    if (instr_type == 3){
+        return 0;
+    }
+    else{
+        int r = check_instruction(parsed_instr);
+        int full = i | r ;
+        return full;
+    }
+}
+
+
+int main(int argc, char* argv[]) {
+
+    char* *file_text = readFile(argv[1]);
+    FILE * fout = fopen(argv[2], "w+");
+    int fileSize = atoi(argv[3]);
+
+    char *instr;
+    char* *f;
+    int lineNum;
+
+    for (lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
+        instr = strdup(file_text[lineNum]);
+        f = parse_instr(instr);
+        if (f[0] != 0){
+            // anything that happens in this conditional happens with the useful values of f
+            int res = run_each(f, lineNum);
+            fprintf(fout, "%08x\n",res);
+            printf("%x\n",res);
+        }
+    }
+    fclose(fout);
+
+    return 0;
 }
