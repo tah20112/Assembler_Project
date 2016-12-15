@@ -377,10 +377,6 @@ int main() {
     int i = check_function(parsed_instr[0]);
     int r = check_instruction(parsed_instr);
     int full = i | r ;
-    printf("%x\n", full);
-
-
-    to_binary(full);
 
     return full;
 }
