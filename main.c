@@ -269,8 +269,9 @@ int main(int argc, char* argv[]) {
     char* *f;
     int reg;
     int i;
+    int lineNum;
 
-    for (int lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
+    for (lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
         instr = strdup(file_text[lineNum]);
         f = parse_instr(instr);
         if (f[0] != 0){
