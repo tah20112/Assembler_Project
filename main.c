@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -96,13 +97,21 @@ int check_function(const char* instr){
      char *word;
      char* *output = malloc(5);
      int counter = 0;
+     size_t comm_test;
+
      while (instruction != NULL){
         word = strsep(&instruction, " ");
-        output[counter] = word;
-        counter++;
+        comm_test = strcspn(word, "#");
+        if (comm_test != 0){
+            output[counter] = word;
+            counter++;
+        } else{
+            break;
+        }
      }
      return output;
  }
+
 
 
 //Assembly code comes in, machine code comes out.
@@ -347,6 +356,7 @@ int j_type(char* instruction[2]){
 //Input: parsed string with pointer containing separated instruction ("addi" "$s1" "$t2" "45")
 //Output: 26-bit machine code corresponding to the correct registers and immediate used
 int check_instruction(char* instruction[4]) {
+
     int i = 0;
     switch(instr_type) {
         case 0:
@@ -358,29 +368,75 @@ int check_instruction(char* instruction[4]) {
         case 2:
             i = j_type(instruction);
             break;
-        case -1:
-            break;
         default:break;
+
     }
     return i;
 }
+
+char* *readFile(char * file){
+
+    FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    char* *text_lines = calloc(128, sizeof(char*));
+    int counter = 0;
+  
+    fp = fopen(file, "r");
+    if (fp == NULL){
+        printf("Error: file empty");
+        exit(EXIT_FAILURE);
+    }
+      while((read = getline(&line, &len, fp)) != -1){
+        if (line[0] != '\n'){
+            text_lines[counter] = strdup(line);
+            counter ++;
+        }
+    }
+
+    //fclose(fp);
+    //if (line)
+    //    free(line);
+    return text_lines;
+}
+
+
 
 //This is the main function of the  program
 //  it runs all the other functions
 //Input: none
 //Output: 32-bit machine code corresponding to the correct functions, registers, and immediate used
-int main() {
-    char* instruction = "j 450";
-    char *instr = strdup(instruction);
-    char* *parsed_instr;
-    parsed_instr = parse_instr(instr);
-    int i = check_function(parsed_instr[0]);
-    int r = check_instruction(parsed_instr);
-    int full = i | r ;
-    printf("%x\n", full);
 
 
-    to_binary(full);
+int main(int argc, char* argv[]) {
 
-    return full;
+    //instr_type: 0 is R; 1 is I; 2 is J.
+
+    char* *file_text = readFile(argv[1]);
+    FILE * fout = fopen(argv[2], "w+");
+    int fileSize = atoi(argv[3]);
+
+    const char fake[] = "xori $t3 $t4 $t1 # Now a comment";
+    char *instr = strdup(fake);
+    char* *f;
+    int reg;
+    int i;
+    int lineNum;
+
+    for (lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
+        instr = strdup(file_text[lineNum]);
+        f = parse_instr(instr);
+        if (f[0] != 0){
+            printf("%d\n", lineNum); // anything that happens in this conditional happens with the useful values of f
+            fprintf(fout, "%s\n",f[0]);
+        }
+    }
+    fclose(fout);
+    i = check_function(file_text[0]);
+    reg = check_instruction(instr_type, f);
+    printf("%x\n", reg);
+
+    return 0;
 }
+
