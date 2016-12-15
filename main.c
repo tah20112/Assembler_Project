@@ -55,6 +55,8 @@ int check_function(char* instr, int lineNum){
     int funct = 0;
     int opCode = 0;
 
+    printf("a\n");
+
     if(strcmp(instr,"add") == 0){
         opCode = 0x0;
         funct = 0x0020;
@@ -123,6 +125,7 @@ int check_function(char* instr, int lineNum){
         goto end;
     }
     end:
+        printf("b\n");
         result = (opCode << 26) | funct;
         return result;
 }
@@ -414,10 +417,6 @@ int check_instruction(char* instruction[4]) {
 //Output: 26-bit machine code corresponding to the correct registers and immediate used
 int j_type(char* instruction[2]){
 
-    int reg_codes;
-    char* a = instruction[1];
-    sscanf(a, "%x", &reg_codes);
-    int immediate = reg_codes;
 
 
     char* label = instruction[1];
@@ -485,11 +484,13 @@ struct my_struct *find_label(int lineNum) {
     return s;
 }
 
-int run_each(char* instruction, int lineNum){
-    char *instr = strdup(instruction);
+int run_each(char* * parsed_instr, int lineNum){
+/*    char *instr = strdup(instruction);
     char* *parsed_instr;
-    parsed_instr = parse_instr(instr);
+    parsed_instr = parse_instr(instr);*/
+    printf("0\n");
     int i = check_function(parsed_instr[0], lineNum);
+    printf("0\n");
     if (instr_type == 3){
         return 0;
     }
@@ -504,6 +505,7 @@ int run_each(char* instruction, int lineNum){
 int main(int argc, char* argv[]) {
 
     //instr_type: 0 is R; 1 is I; 2 is J.
+/*
     char* test = "frog";
     int result = run_each(test, 2);
     test = "j frog";
@@ -511,22 +513,30 @@ int main(int argc, char* argv[]) {
 
     printf("%s\n", "result:");
     printf("%x\n", result);
-
+*/
+    printf("0\n");
     char* *file_text = readFile(argv[1]);
     FILE * fout = fopen(argv[2], "w+");
     int fileSize = atoi(argv[3]);
 
-    const char fake[] = "xori $t3 $t4 $t1 # Now a comment";
-    char *instr = strdup(fake);
+    //const char fake[] = "xori $t3 $t4 $t1 # Now a comment";
+    char *instr;
     char* *f;
     int reg;
     int i;
     int lineNum;
-
+    printf("1\n");
     for (lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
+        printf("2\n");
         instr = strdup(file_text[lineNum]);
+        printf("3\n");
         f = parse_instr(instr);
+        printf("%s\n",f);
+        //int out = run_each(f,lineNum);
+        printf("5\n");
+        //printf("%x\n",out);
         if (f[0] != 0){
+            printf("%s\n", f);
             printf("%d\n", lineNum); // anything that happens in this conditional happens with the useful values of f
             fprintf(fout, "%s\n",f[0]);
         }

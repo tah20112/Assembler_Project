@@ -3,3 +3,5 @@ Authors: Tom Heale, Anna Buchele, and Zarin Bhuiyan
 This is just a # test line, so you should ignore it
 
 Did it skip the last line?
+
+$add $t1 $t2 $t3
