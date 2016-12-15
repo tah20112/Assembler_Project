@@ -10,7 +10,7 @@ module instMem
 );
     reg [31:0] instructionMem [20:0]; // Instantiate the instructionMem
 
-    initial $readmemh("assembly_test.dat", instructionMem); // Read the file containing the instructions
+    initial $readmemh("assembled_code.dat", instructionMem); // Read the file containing the instructions
  	
     assign instruction = instructionMem[read_address>>2];	// Assign the appropriate data to instruction
 
