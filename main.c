@@ -485,10 +485,8 @@ struct my_struct *find_label(int lineNum) {
     return s;
 }
 
-int run_each(char* instruction, int lineNum){
-    char *instr = strdup(instruction);
-    char* *parsed_instr;
-    parsed_instr = parse_instr(instr);
+int run_each(char* *parsed_instr, int lineNum){
+
     int i = check_function(parsed_instr[0], lineNum);
     if (instr_type == 3){
         return 0;
@@ -502,15 +500,6 @@ int run_each(char* instruction, int lineNum){
 
 
 int main(int argc, char* argv[]) {
-
-    //instr_type: 0 is R; 1 is I; 2 is J.
-    char* test = "frog";
-    int result = run_each(test, 2);
-    test = "j frog";
-    result = run_each(test, 2);
-
-    printf("%s\n", "result:");
-    printf("%x\n", result);
 
     char* *file_text = readFile(argv[1]);
     FILE * fout = fopen(argv[2], "w+");
@@ -527,35 +516,15 @@ int main(int argc, char* argv[]) {
         instr = strdup(file_text[lineNum]);
         f = parse_instr(instr);
         if (f[0] != 0){
-            printf("%d\n", lineNum); // anything that happens in this conditional happens with the useful values of f
-            fprintf(fout, "%s\n",f[0]);
+            // anything that happens in this conditional happens with the useful values of f
+            int res = run_each(f, lineNum);
+            fprintf(fout, "%x\n",res);
+            printf("%x\n",res);
         }
     }
     fclose(fout);
     i = check_function(file_text[0], lineNum);
     reg = check_instruction(f);
-    printf("%x\n", reg);
-
-    /*    char* instruction = "frog";
-    char *instr = strdup(instruction);
-    char* *parsed_instr;
-    parsed_instr = parse_instr(instr);
-    int i = check_function(parsed_instr[0], 30);
-    int r = check_instruction(parsed_instr);
-    int full = i | r ;
-    struct my_struct *s;
-    instruction = "j frog";
-    instr = strdup(instruction);
-    parsed_instr = parse_instr(instr);
-    i = check_function(parsed_instr[0],11);
-    r = check_instruction(parsed_instr);
-    full = i | r;*/
-
-    //to_binary(full);
-
-//    add_label(35, "frog");
-
-//    s = find_label(35);
 
     return 0;
 }
