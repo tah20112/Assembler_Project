@@ -477,8 +477,6 @@ char* *readFile(char * file){
 //  it runs all the other functions
 //Input: none
 //Output: 32-bit machine code corresponding to the correct functions, registers, and immediate used
-
-
 int run_each(char* *parsed_instr, int lineNum){
 
     int i = check_function(parsed_instr[0], lineNum);
@@ -517,4 +515,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
