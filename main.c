@@ -163,7 +163,18 @@ int check_function(char* instr, int lineNum){
 int r_type(char* instruction[4]){
     int n = 1;          //start at 1st register, which is 2nd in mips instruction
     int reg_codes[3];   //create array to place the machine code for each register
-    while (n < 4) {     //run it for each of the three registers/immediates
+    int jr_flag = 0;
+    int len = 4;
+    int reg_full;
+    int reg_1 = 0;
+    int reg_2 = 0;
+    int reg_3 = 0;
+    if (strcmp(instruction[0],"jr") == 0){
+        jr_flag = 1;
+        len = 2;
+
+    }
+    while (n < len) {     //run it for each of the three registers/immediates
         int a = n-1;    //just to avoid calculating [n-1] every time the array is called
         char* reg_letter;
 
@@ -260,14 +271,21 @@ int r_type(char* instruction[4]){
         n = n+1;
     }
 
-    int reg_1 = reg_codes[1] << 21;
-    int reg_2 = reg_codes[2] << 16;
-    int reg_3 = reg_codes[0] << 11;
+
+    if (jr_flag == 1){
+        reg_1 = reg_codes[0] << 21;
+        reg_2 = 0;
+        reg_3 = 0;
+        goto end;
+    }
+    reg_1 = reg_codes[1] << 21;
+    reg_2 = reg_codes[2] << 16;
+    reg_3 = reg_codes[0] << 11;
 
 
 
-
-    int reg_full = reg_1 | reg_2 | reg_3;
+    end:
+    reg_full = reg_1 | reg_2 | reg_3;
 
         return reg_full;
 
@@ -464,10 +482,6 @@ char* *readFile(char * file){
             counter ++;
         }
     }
-
-    //fclose(fp);
-    //if (line)
-    //    free(line);
     return text_lines;
 }
 
@@ -491,6 +505,10 @@ int run_each(char* *parsed_instr, int lineNum){
     }
 }
 
+void pre_run(char* *parsed_instr, int lineNum){ //does preliminary run through to gather labels
+    int i = check_function(parsed_instr[0], lineNum);
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -501,6 +519,17 @@ int main(int argc, char* argv[]) {
     char *instr;
     char* *f;
     int lineNum;
+
+
+    for (lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
+        instr = strdup(file_text[lineNum]);
+        f = parse_instr(instr);
+        if (f[0] != 0){
+            // anything that happens in this conditional happens with the useful values of f
+            //this does a "pre-run" through all the lines to collect the labels
+            pre_run(f, lineNum);
+        }
+    }
 
     for (lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
         instr = strdup(file_text[lineNum]);
