@@ -4,11 +4,14 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-int instr_type = -1; //0 is R; 1 is I; 2 is J.
+int instr_type = -1;          // 0 is R; 1 is I; 2 is J.
 
 
+
+//This function prints the binary of a hex input
+//Input: hex number
+//Output: none (prints binary number)
 void to_binary(int n){
-
     while (n){
         if (n & 0x80000000)
             printf("1");
@@ -18,7 +21,10 @@ void to_binary(int n){
     }
 }
 
-
+//This function takes the function instruction and
+//  checks it and outputs the correct opcodes and function codes
+//Input: string containing function ('add','j','xori',etc...)
+//Output: 32-bit opcode and, if used, function code
 int check_function(const char* instr){
     int result = 0;
     int funct = 0;
@@ -62,7 +68,7 @@ int check_function(const char* instr){
         goto end;
     }
     if(strcmp(instr,"xori") == 0){
-        opCode = 0x14;
+        opCode = 0xe;
         instr_type = 1;
         goto end;
     }
@@ -83,6 +89,10 @@ int check_function(const char* instr){
         return result;
 }
 
+//This function takes in the full mips instruction
+//  and separates it into the four instruction strings
+//Input: string containing full mips instruction ("add $t1 $t2 $s1)
+//Output: string with pointer containing separated instruction ("add" "$t1" "$t2" "$s1")
  char* *parse_instr(char *instruction){
      char *word;
      char* *output = malloc(5);
@@ -104,19 +114,138 @@ int check_function(const char* instr){
 
 
 
-int r_type(char* instruction[4]){
+//Assembly code comes in, machine code comes out.
+// OPCODE RS RT RD SHIFT FUNCT
+// 000000  5  5  5  5     6
 
-    return 0;
+//This function takes in the full parsed mips instruction
+//  and outputs the correct register codes for an r-type instruction
+//Input: parsed string with pointer containing separated instruction ("add" "$t1" "$t2" "$s1")
+//Output: 26-bit machine code corresponding to the correct registers used
+int r_type(char* instruction[4]){
+    int n = 1;          //start at 1st register, which is 2nd in mips instruction
+    int reg_codes[3];   //create array to place the machine code for each register
+    while (n < 4) {     //run it for each of the three registers/immediates
+        int a = n-1;    //just to avoid calculating [n-1] every time the array is called
+        char* reg_letter;
+
+        //First, run strncmp on the first two letters with each register letter
+        //if strncmp(instruction[n], $(letter), 2) == 0, the first two characters are $(letter).
+
+        if (strncmp(instruction[n], "$s", 2) == 0) {
+            reg_letter = "$s";
+        }
+        else if (strncmp(instruction[n], "$t", 2) == 0) {
+            reg_letter = "$t";
+        }
+        else if (strncmp(instruction[n], "$a", 2) == 0) {
+            reg_letter = "$a";
+        }
+        else if (strncmp(instruction[n], "$v", 2) == 0) {
+            reg_letter = "$v";
+        }
+        else if (strncmp(instruction[n], "$k", 2) == 0) {
+            reg_letter = "$k";
+        }
+        else if (strncmp(instruction[n], "$g", 2) == 0) {
+            reg_letter = "$g";
+        }
+        else if (strncmp(instruction[n], "$g", 2) == 0) {
+            reg_letter = "$f";
+        }
+        else if (strncmp(instruction[n], "$r", 2) == 0) {
+            reg_letter = "$r";
+        }
+        else if (strncmp(instruction[n], "$z", 2) == 0) {
+            reg_letter = "$";   //set to null reg_letter value
+            reg_codes[a] = 0b00000;
+            //if the register call starts with $z, it must be the zero register
+            //and we can just fill in reg_codes[a] here.
+        }
+        else{
+            //if none of the above are correct, then we must be dealing with an immediate
+            reg_letter = "$";               //set to null reg_letter value
+            char* s = instruction[n];       //do string convert from hex value to integer
+            sscanf(s, "%x", &reg_codes[a]); //and save it to the reg_codes[a]
+        }
+
+        //if we got a reg_letter earlier, we can run the strncmp to get the value for the next
+        //  character after the reg_letter. We use that value to find the full register address.
+        int i = strncmp(instruction[n], reg_letter, 3);
+
+        //calculated equations for the difference between strncmp return value and corresponding register address
+        if (reg_letter == "$t"){
+            if (i == 0x38){
+                reg_codes[a] = 0x18;
+            }
+            else if (i == 0x39){
+                reg_codes[a] = 0x19;
+            }
+            else {
+                reg_codes[a] = (i - 0x28);
+            }
+        }
+        else if (reg_letter == "$s") {
+            if (i == 0x70) {
+                reg_codes[a] = 0x1d;
+            }
+            else{
+                reg_codes[a] = (i-0x1a);
+            }
+        }
+        else if (reg_letter == "$v") {
+            if (i == 0x31) {
+                reg_codes[a] = 0x2;
+            }
+            else if (i == 0x32){
+                reg_codes[a] = 0x3;
+            }
+        }
+        else if (reg_letter == "$a") {
+            if (i == 116){
+                reg_codes[a] = 1;
+            }
+            reg_codes[a] = (i - 0x2c);
+        }
+        else if (reg_letter == "$k") {
+            reg_codes[a] = (i - 0x16);
+        }
+        else if (reg_letter == "$g") {
+            reg_codes[a] = 28;
+        }
+        else if (reg_letter == "$f") {
+            reg_codes[a] = 30;
+        }
+        else if (reg_letter == "$r") {
+            reg_codes[a] = 31;
+        }
+        n = n+1;
+    }
+
+    int reg_1 = reg_codes[1] << 21;
+    int reg_2 = reg_codes[2] << 16;
+    int reg_3 = reg_codes[0] << 11;
+
+
+
+
+    int reg_full = reg_1 | reg_2 | reg_3;
+
+        return reg_full;
+
 }
 
-
+//This function takes in the full parsed mips instruction
+//  and outputs the correct register codes for an i-type instruction
+//Input: parsed string with pointer containing separated instruction ("addi" "$t1" "$t2" "45")
+//Output: 26-bit machine code corresponding to the correct registers and immediate used
 int i_type(char* instruction[4]){
     int n = 1;
     int reg_codes[3];
     while (n < 4) {
         int a = n-1;
 
-        char* reg_letter = "$";
+        char* reg_letter;
         if (strncmp(instruction[n], "$s", 2) == 0) {
             reg_letter = "$s";
         }
@@ -203,16 +332,31 @@ int i_type(char* instruction[4]){
     int reg_2 = reg_codes[1] << 21;
     int reg_3 = reg_codes[2];
 
-    int reg_full =reg_1 | reg_2 | reg_3;
+    int reg_full = reg_1 | reg_2 | reg_3;
         return reg_full;
 }
 
-int j_type(char* instruction[4]){
+//This function takes in the full parsed mips instruction
+//  and outputs the correct register codes for an i-type instruction
+//Input: parsed string with pointer containing separated instruction ("j" "45")
+//Output: 26-bit machine code corresponding to the correct registers and immediate used
+int j_type(char* instruction[2]){
 
-    return 2;
+    int reg_codes;
+    char* s = instruction[1];
+    sscanf(s, "%x", &reg_codes);
+    int immediate = reg_codes;
+
+    return immediate;
 }
 
-int check_instruction(int instr_type, char* instruction[4]) {
+//This function takes in the full parsed mips instruction
+//  and according to the instruction type (global variable instr_type, assigned in check_function)
+//  runs the correct type of instruction parser
+//Input: parsed string with pointer containing separated instruction ("addi" "$s1" "$t2" "45")
+//Output: 26-bit machine code corresponding to the correct registers and immediate used
+int check_instruction(char* instruction[4]) {
+
     int i = 0;
     switch(instr_type) {
         case 0:
@@ -224,6 +368,8 @@ int check_instruction(int instr_type, char* instruction[4]) {
         case 2:
             i = j_type(instruction);
             break;
+        default:break;
+
     }
     return i;
 }
@@ -236,14 +382,13 @@ char* *readFile(char * file){
     ssize_t read;
     char* *text_lines = calloc(128, sizeof(char*));
     int counter = 0;
-
-   fp = fopen(file, "r");
+  
+    fp = fopen(file, "r");
     if (fp == NULL){
         printf("Error: file empty");
         exit(EXIT_FAILURE);
     }
-
-    while((read = getline(&line, &len, fp)) != -1){
+      while((read = getline(&line, &len, fp)) != -1){
         if (line[0] != '\n'){
             text_lines[counter] = strdup(line);
             counter ++;
@@ -255,6 +400,14 @@ char* *readFile(char * file){
     //    free(line);
     return text_lines;
 }
+
+
+
+//This is the main function of the  program
+//  it runs all the other functions
+//Input: none
+//Output: 32-bit machine code corresponding to the correct functions, registers, and immediate used
+
 
 int main(int argc, char* argv[]) {
 
@@ -286,3 +439,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
