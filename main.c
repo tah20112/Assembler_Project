@@ -2,15 +2,25 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stddef.h>
-
-int instr_type = -1;          // 0 is R; 1 is I; 2 is J.
+#include "uthash.h"
 
 
+int instr_type = -1; //0 is R; 1 is I; 2 is J; 3 is label
+
+
+
+
+struct my_struct *jumps = NULL;
+struct my_struct {
+    int lineNum;                    /* key */
+    char label[10];
+    UT_hash_handle hh;         /* makes this structure hashable */
+};
 
 //This function prints the binary of a hex input
 //Input: hex number
 //Output: none (prints binary number)
+
 void to_binary(int n){
     while (n){
         if (n & 0x80000000)
@@ -21,11 +31,26 @@ void to_binary(int n){
     }
 }
 
+
+void add_label(int lineNum, char *label) {
+    struct my_struct *s;
+
+    HASH_FIND_INT(jumps, &lineNum, s);  /* id already in the hash? */
+    if (s==NULL) {
+        s = (struct my_struct*)malloc(sizeof(struct my_struct));
+        s->lineNum = lineNum;
+        HASH_ADD_INT( jumps, lineNum, s );  /* id: name of key field */
+    }
+    strcpy(s->label, label);
+}
+
+int check_function(char* instr, int lineNum){
+
 //This function takes the function instruction and
 //  checks it and outputs the correct opcodes and function codes
 //Input: string containing function ('add','j','xori',etc...)
 //Output: 32-bit opcode and, if used, function code
-int check_function(const char* instr){
+
     int result = 0;
     int funct = 0;
     int opCode = 0;
@@ -36,52 +61,65 @@ int check_function(const char* instr){
         instr_type = 0;
         goto end;
     }
-    if(strcmp(instr,"lw") == 0){
+    else if(strcmp(instr,"addi") == 0){
+        opCode = 0x8;
+        funct = 0x0020;
+        instr_type = 1;
+        goto end;
+    }
+    else if(strcmp(instr,"lw") == 0){
         opCode = 0x0023;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"sw") == 0){
+    else if(strcmp(instr,"sw") == 0){
         opCode = 0x2b;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"j") == 0){
+    else if(strcmp(instr,"j") == 0){
         opCode = 0x2;
         instr_type = 2;
         goto end;
     }
-    if(strcmp(instr,"jr") == 0){
+    else if(strcmp(instr,"jr") == 0){
         opCode = 0x0;
         funct = 0x8;
         instr_type = 0;
         goto end;
     }
-    if(strcmp(instr,"jal") == 0){
+    else if(strcmp(instr,"jal") == 0){
         opCode = 0x3;
         instr_type = 2;
         goto end;
     }
-    if(strcmp(instr,"bne") == 0){
+    else if(strcmp(instr,"bne") == 0){
         opCode = 0x5;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"xori") == 0){
+    else if(strcmp(instr,"xori") == 0){
         opCode = 0xe;
         instr_type = 1;
         goto end;
     }
-    if(strcmp(instr,"sub") == 0){
+    else if(strcmp(instr,"sub") == 0){
         opCode = 0x0;
         funct = 0x22;
         instr_type = 0;
         goto end;
     }
-    if(strcmp(instr,"slt") == 0){
+    else if(strcmp(instr,"slt") == 0){
         opCode = 0x0;
         funct = 0x2a;
         instr_type = 0;
+        goto end;
+    }
+    else {
+        add_label(lineNum, instr);
+        opCode = 0x0;
+        funct = 0x0;
+        instr_type = 3;
         goto end;
     }
     end:
@@ -111,7 +149,6 @@ int check_function(const char* instr){
      }
      return output;
  }
-
 
 
 //Assembly code comes in, machine code comes out.
@@ -235,10 +272,12 @@ int r_type(char* instruction[4]){
 
 }
 
+
 //This function takes in the full parsed mips instruction
 //  and outputs the correct register codes for an i-type instruction
 //Input: parsed string with pointer containing separated instruction ("addi" "$t1" "$t2" "45")
 //Output: 26-bit machine code corresponding to the correct registers and immediate used
+
 int i_type(char* instruction[4]){
     int n = 1;
     int reg_codes[3];
@@ -336,6 +375,35 @@ int i_type(char* instruction[4]){
         return reg_full;
 }
 
+
+int check_instruction(char* instruction[4]) {
+    int i = 0;
+    switch(instr_type) {
+        case 0:
+            i = r_type(instruction);
+            break;
+        case 1:
+            i = i_type(instruction);
+            break;
+        case 2:
+            i = j_type(instruction);
+            // return j; //get value from hashtable and return int
+            break;
+        default:break;
+    }
+    return i;
+}
+
+
+// function that takes in all instructions, saves
+// all labels and line numbers in hashtable first?
+
+
+
+
+
+int j_type(char* instruction[2]){
+=======
 //This function takes in the full parsed mips instruction
 //  and outputs the correct register codes for an i-type instruction
 //Input: parsed string with pointer containing separated instruction ("j" "45")
@@ -347,7 +415,24 @@ int j_type(char* instruction[2]){
     sscanf(s, "%x", &reg_codes);
     int immediate = reg_codes;
 
-    return immediate;
+
+    char* label = instruction[1];
+    struct my_struct *s;
+
+    for(s=jumps; s != NULL; s=s->hh.next) {
+        //printf("user id %d: name %s\n", s->lineNum, s->label);
+        char* checklabel = &s->label[0];
+        printf("%s", checklabel);
+        printf("%s", label);
+        printf("%s", checklabel);
+        if (label == checklabel){
+            return s -> lineNum;
+        }
+    }
+    printf("%s\n", "not found");
+    return 0;
+
+
 }
 
 //This function takes in the full parsed mips instruction
@@ -403,11 +488,61 @@ char* *readFile(char * file){
 
 
 
+
 //This is the main function of the  program
 //  it runs all the other functions
 //Input: none
 //Output: 32-bit machine code corresponding to the correct functions, registers, and immediate used
 
+
+struct my_struct *find_label(int lineNum) {
+    struct my_struct *s;
+    HASH_FIND_INT( jumps, &lineNum, s );  /* s: output pointer */
+    return s;
+}
+
+int run_each(char* instruction, int lineNum){
+    char *instr = strdup(instruction);
+    char* *parsed_instr;
+    parsed_instr = parse_instr(instr);
+    int i = check_function(parsed_instr[0], lineNum);
+    if (instr_type == 3){
+        return 0;
+    }
+    else{
+        int r = check_instruction(parsed_instr);
+        int full = i | r ;
+        return full;
+    }
+}
+
+int main(int argc, char *argv[]) {
+/*    char* instruction = "frog";
+    char *instr = strdup(instruction);
+    char* *parsed_instr;
+    parsed_instr = parse_instr(instr);
+    int i = check_function(parsed_instr[0], 30);
+    int r = check_instruction(parsed_instr);
+    int full = i | r ;
+    struct my_struct *s;
+    instruction = "j frog";
+    instr = strdup(instruction);
+    parsed_instr = parse_instr(instr);
+    i = check_function(parsed_instr[0],11);
+    r = check_instruction(parsed_instr);
+    full = i | r;*/
+    char* test = "frog";
+    int result = run_each(test, 2);
+    test = "j frog";
+    result = run_each(test, 2);
+
+    printf("%s\n", "result:");
+    printf("%x\n", result);
+    //to_binary(full);
+
+//    add_label(35, "frog");
+
+//    s = find_label(35);
 
 int main(int argc, char* argv[]) {
 
