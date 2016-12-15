@@ -376,6 +376,12 @@ int i_type(char* instruction[4]){
 }
 
 
+//This function takes in the full parsed mips instruction
+//  and outputs the correct register codes for an i-type instruction
+//Input: parsed string with pointer containing separated instruction ("j" "45")
+//Output: 26-bit machine code corresponding to the correct registers and immediate used
+int j_type(char* instruction[2]);
+
 int check_instruction(char* instruction[4]) {
     int i = 0;
     switch(instr_type) {
@@ -419,15 +425,12 @@ int j_type(char* instruction[2]){
 
     for(s=jumps; s != NULL; s=s->hh.next) {
         //printf("user id %d: name %s\n", s->lineNum, s->label);
+
         char* checklabel = &s->label[0];
-        printf("%s", checklabel);
-        printf("%s", label);
-        printf("%s", checklabel);
-        if (label == checklabel){
+        if (strcmp(checklabel, label) == 0){
             return s -> lineNum;
         }
     }
-    printf("%s\n", "not found");
     return 0;
 
 
@@ -501,6 +504,13 @@ int run_each(char* instruction, int lineNum){
 int main(int argc, char* argv[]) {
 
     //instr_type: 0 is R; 1 is I; 2 is J.
+    char* test = "frog";
+    int result = run_each(test, 2);
+    test = "j frog";
+    result = run_each(test, 2);
+
+    printf("%s\n", "result:");
+    printf("%x\n", result);
 
     char* *file_text = readFile(argv[1]);
     FILE * fout = fopen(argv[2], "w+");
@@ -540,13 +550,7 @@ int main(int argc, char* argv[]) {
     i = check_function(parsed_instr[0],11);
     r = check_instruction(parsed_instr);
     full = i | r;*/
-    char* test = "frog";
-    int result = run_each(test, 2);
-    test = "j frog";
-    result = run_each(test, 2);
 
-    printf("%s\n", "result:");
-    printf("%x\n", result);
     //to_binary(full);
 
 //    add_label(35, "frog");
