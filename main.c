@@ -32,6 +32,7 @@ void to_binary(int n){
 }
 
 
+
 void add_label(int lineNum, char *label) {
     struct my_struct *s;
 
@@ -422,16 +423,12 @@ int j_type(char* instruction[2]){
     struct my_struct *s;
 
     for(s=jumps; s != NULL; s=s->hh.next) {
-        //printf("user id %d: name %s\n", s->lineNum, s->label);
-
         char* checklabel = &s->label[0];
         if (strcmp(checklabel, label) == 0){
             return s -> lineNum;
         }
     }
     return 0;
-
-
 }
 
 //This function takes in the full parsed mips instruction
