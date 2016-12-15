@@ -1,4 +1,4 @@
-#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -417,8 +417,6 @@ int j_type(char* instruction[2]){
     int reg_codes;
     char* a = instruction[1];
     sscanf(a, "%x", &reg_codes);
-    int immediate = reg_codes;
-
 
     char* label = instruction[1];
     struct my_struct *s;
@@ -448,17 +446,19 @@ char* *readFile(char * file){
     FILE * fp;
     char * line = NULL;
     size_t len = 0;
-    ssize_t read;
     char* *text_lines = calloc(128, sizeof(char*));
     int counter = 0;
-  
+    ssize_t read = 0;
+
     fp = fopen(file, "r");
     if (fp == NULL){
         printf("Error: file empty");
         exit(EXIT_FAILURE);
     }
-      while((read = getline(&line, &len, fp)) != -1){
-        if (line[0] != '\n'){
+
+      while(read != -1){
+          read = getline(&line, &len, fp);
+          if (line[0] != '\n'){
             text_lines[counter] = strdup(line);
             counter ++;
         }
@@ -477,14 +477,6 @@ char* *readFile(char * file){
 //  it runs all the other functions
 //Input: none
 //Output: 32-bit machine code corresponding to the correct functions, registers, and immediate used
-
-
-struct my_struct *find_label(int lineNum) {
-    struct my_struct *s;
-    HASH_FIND_INT( jumps, &lineNum, s );  /* s: output pointer */
-    return s;
-}
-
 int run_each(char* *parsed_instr, int lineNum){
 
     int i = check_function(parsed_instr[0], lineNum);
@@ -507,8 +499,6 @@ int main(int argc, char* argv[]) {
 
     char *instr;
     char* *f;
-    int reg;
-    int i;
     int lineNum;
 
     for (lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
@@ -525,4 +515,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-

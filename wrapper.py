@@ -8,7 +8,8 @@ def main(file_in, file_out):
     with open(file_in) as f:
         for i, line in enumerate(f):
             if any(ord(char) > 128 for char in line):
-                print "Use normal ASCII characters"
+                print "Please use English characters in your assembly code. You may get crazy errors in the assembler, but I won't stop you. Go ahead and make your own mistakes."
+>>>>>>> 556a176a8de2914248c4c454231528f6dcb9eda4
     num_lines = i + 1
     call(["./assembler", file_in, file_out, str(num_lines)])
 
