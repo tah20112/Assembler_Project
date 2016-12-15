@@ -434,7 +434,7 @@ int main(int argc, char* argv[]) {
     }
     fclose(fout);
     i = check_function(file_text[0]);
-    reg = check_instruction(instr_type, f);
+    reg = check_instruction(f);
     printf("%x\n", reg);
 
     return 0;
