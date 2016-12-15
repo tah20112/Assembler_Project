@@ -5,8 +5,8 @@
 #include "uthash.h"
 
 
-int instr_type = -1; //0 is R; 1 is I; 2 is J; 3 is label
 
+int instr_type = -1; //0 is R; 1 is I; 2 is J; 3 is label
 
 
 
@@ -137,13 +137,13 @@ int check_function(char* instr, int lineNum){
      char* *output = malloc(5);
      int counter = 0;
      size_t comm_test;
-
      while (instruction != NULL){
         word = strsep(&instruction, " ");
         comm_test = strcspn(word, "#");
         if (comm_test != 0){
             output[counter] = word;
             counter++;
+
         } else{
             break;
         }
@@ -420,14 +420,18 @@ int j_type(char* instruction[2]){
     sscanf(a, "%x", &reg_codes);
 
     char* label = instruction[1];
+
     struct my_struct *s;
 
     for(s=jumps; s != NULL; s=s->hh.next) {
         char* checklabel = &s->label[0];
+        checklabel[strlen(checklabel)-2] = 0;
+        label[strlen(label)-1] = 0;
         if (strcmp(checklabel, label) == 0){
             return s -> lineNum;
         }
     }
+    printf("no match");
     return 0;
 }
 

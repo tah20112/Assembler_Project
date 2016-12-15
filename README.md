@@ -1,3 +1,4 @@
-jr $ra
 xori $t0, $zero, 4 #t0 = 4
-xori $t1, $zero, 1 #t1 = 1
+jr $t3
+jr $t2
+xori $t0, $zero, 4 #t0 = 4
