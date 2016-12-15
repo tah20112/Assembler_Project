@@ -34,6 +34,7 @@ void to_binary(int n){
 
 
 void add_label(int lineNum, char *label) {
+    label[strlen(label)-1] = 0;
     struct my_struct *s;
 
     HASH_FIND_INT(jumps, &lineNum, s);  /* id already in the hash? */
@@ -443,21 +444,20 @@ int j_type(char* instruction[2]){
 
     for(s=jumps; s != NULL; s=s->hh.next) {
         char* checklabel = &s->label[0];
-        checklabel[strlen(checklabel)-2] = 0;
-        label[strlen(label)-1] = 0;
         if (strcmp(checklabel, label) == 0){
             return s -> lineNum;
         }
     }
-    printf("no match");
     return 0;
 }
+
 
 //This function takes in the full parsed mips instruction
 //  and according to the instruction type (global variable instr_type, assigned in check_function)
 //  runs the correct type of instruction parser
 //Input: parsed string with pointer containing separated instruction ("addi" "$s1" "$t2" "45")
 //Output: 26-bit machine code corresponding to the correct registers and immediate used
+
 
 
 char* *readFile(char * file){
@@ -492,18 +492,6 @@ char* *readFile(char * file){
 //  it runs all the other functions
 //Input: none
 //Output: 32-bit machine code corresponding to the correct functions, registers, and immediate used
-int run_each(char* *parsed_instr, int lineNum){
-
-    int i = check_function(parsed_instr[0], lineNum);
-    if (instr_type == 3){
-        return 0;
-    }
-    else{
-        int r = check_instruction(parsed_instr);
-        int full = i | r ;
-        return full;
-    }
-}
 
 void pre_run(char* *parsed_instr, int lineNum){ //does preliminary run through to gather labels
     int i = check_function(parsed_instr[0], lineNum);
@@ -519,7 +507,8 @@ int main(int argc, char* argv[]) {
     char *instr;
     char* *f;
     int lineNum;
-
+    int slineNum = 0; //stored line number
+    int full = 0;
 
     for (lineNum = 0; lineNum < fileSize; lineNum++){ // Use Python to determine number of lines
         instr = strdup(file_text[lineNum]);
@@ -536,9 +525,18 @@ int main(int argc, char* argv[]) {
         f = parse_instr(instr);
         if (f[0] != 0){
             // anything that happens in this conditional happens with the useful values of f
-            int res = run_each(f, lineNum);
-            fprintf(fout, "%08x\n",res);
-            printf("%08x\n",res);
+            int i = check_function(f[0], slineNum);
+            if (instr_type == 3){
+                goto next;
+            }
+            else{
+                int r = check_instruction(f);
+                full = i | r ;
+                slineNum = slineNum + 1;
+            }
+            fprintf(fout, "%08x\n",full);
+            printf("%08x\n",full);
+            next:;
         }
     }
     fclose(fout);
