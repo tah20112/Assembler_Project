@@ -13,4 +13,4 @@ def main(file_in, file_out):
     call(["./assembler", file_in, file_out, str(num_lines)])
 
 if __name__ == "__main__":
-    main(sys.argv[0], sys.argv[1])
+    main(sys.argv[1], sys.argv[2])
